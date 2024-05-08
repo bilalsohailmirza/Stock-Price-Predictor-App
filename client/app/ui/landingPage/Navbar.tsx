@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { useTheme } from "next-themes";
-import Container from "../../components/ui/container";
-import { Button } from "../../components/ui/button";
+import Container from "../../../components/ui/container";
+import { Button } from "../../../components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Menu, Moon, Sun } from "lucide-react";
 // import ProfileButton from "./ui/ProfileButton";
@@ -20,7 +20,7 @@ const Navbar = () => {
       label: "SignIn",
     },
     {
-      href: "/",
+      href: "/dashboard",
       label: "Dasboard",
     },
   ];
