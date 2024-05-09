@@ -19,6 +19,26 @@ def generate_graphs(companies: list[str]):
         df = read_frame(stocks)
         print(df.info())
         return df
+    
+def load_model():
+    global regressor
+    regressor = Sequential()
+    checkpoint_path = os.path.join(os.path.dirname(__file__), "checkpoint")
+    with open(os.path.join(checkpoint_path, "checkpoint.pkl"), "rb") as f:
+        regressor = pickle.load(f)
+
+def load_scaler():
+    global scaler
+    companies = ["AAPL", "AMZN", "CSCO", "GE", "IBM", "GOOG", "MSFT"]
+
+    filepath = os.path.join(os.path.dirname(__file__), "scalers")
+    files = os.listdir(filepath)
+    scaler = {}
+
+    for i in range(len(files)):
+        with open(os.path.join(filepath, files[i]), "rb") as f:
+            scaler[companies[i]] = pickle.load(f)
+    # return scaler
 
 def predict(company: str):
     companies = ["AAPL", "AMZN", "CSCO", "GE", "IBM", "GOOG", "MSFT"]
@@ -27,11 +47,13 @@ def predict(company: str):
         return JsonResponse({"message": "Invalid company name."})
     index = companies.index(company)
 
-    regressor = Sequential()
-    checkpoint_path = os.path.join(os.path.dirname(__file__), "checkpoint")
-    with open(os.path.join(checkpoint_path, "checkpoint.pkl"), "rb") as f:
-        regressor: Sequential = pickle.load(f)
-    scaler = load_scaler()
+    # regressor = Sequential()
+    # checkpoint_path = os.path.join(os.path.dirname(__file__), "checkpoint")
+    # with open(os.path.join(checkpoint_path, "checkpoint.pkl"), "rb") as f:
+    #     regressor: Sequential = pickle.load(f)
+    # scaler = load_scaler()
+    global regressor
+    global scaler
     index = 0
 
     # stocks = Stocks.objects.all().order_by("date")
@@ -73,17 +95,3 @@ def predict(company: str):
     predicted_values = [str(value) for value in predicted_values]
     return JsonResponse({"real": real_values, "predicted": predicted_values})
     # return JsonResponse({"real": 0, "predicted": 0})
-
-
-def load_scaler():
-    companies = ["AAPL", "AMZN", "CSCO", "GE", "IBM", "GOOG", "MSFT"]
-
-    filepath = os.path.join(os.path.dirname(__file__), "scalers")
-    files = os.listdir(filepath)
-    scaler: dict[int, MinMaxScaler] = {}
-
-    for i in range(len(files)):
-        with open(os.path.join(filepath, files[i]), "rb") as f:
-            scaler[companies[i]] = pickle.load(f)
-    # print(type(scaler))
-    return scaler
