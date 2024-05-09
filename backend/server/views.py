@@ -1,15 +1,15 @@
 from django.shortcuts import render, HttpResponse
 from django.http import JsonResponse
 from .models import Stocks
-from .logics import generate_graphs, predict, load_scaler
+from .logics import generate_graphs, predict, getStockData
 
 # Create your views here.
 def myView(request):
     stocks = Stocks.objects.all()
     for stock in stocks:
         pass
-    # data = [stock.volume for stock in stocks]
-    # return HttpResponse(f"Test view. {str(data[:10])}")
+    data = [stock.volume for stock in stocks]
+    return HttpResponse(f"Test view. {str(data[:10])}")
 
 def graph(request):
     companies = ["AAPL"]
@@ -25,4 +25,6 @@ def returnData(request):
 
 def test_logic(request, company):
     return predict(company)
-    # return JsonResponse({"message": "None"})
+
+def getStocks(request, company):
+    return getStockData(company)

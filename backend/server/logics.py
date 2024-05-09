@@ -2,14 +2,12 @@ import matplotlib.pyplot as plt
 import numpy as np
 from django_pandas.io import read_frame
 from django.http import JsonResponse
+from django.core import serializers
 from .models import Stocks
 from sklearn.preprocessing import MinMaxScaler
-from keras.models import Sequential
 from keras.layers import Dense, LSTM, Dropout, GRU, Bidirectional
 from keras.optimizers import SGD
-from keras.models import load_model
-from sklearn.metrics import mean_squared_error
-from silence_tensorflow import silence_tensorflow
+from keras.models import Sequential
 import pickle
 import os
 
@@ -19,6 +17,37 @@ def generate_graphs(companies: list[str]):
         df = read_frame(stocks)
         print(df.info())
         return df
+    
+def getStockData(company: str):
+    companies = ["AAPL", "AMZN", "CSCO", "GE", "IBM", "GOOG", "MSFT"]
+    if company not in companies:
+        return JsonResponse({"message": "Invalid company name."})
+    index = companies.index(company)
+
+    stocks = Stocks.objects.filter(name=company)
+    json_object = serializers.serialize("json", stocks, fields=["id", "name", "date", "open", "close", "high", "low", "close", "adj_close", "volume"])
+    return JsonResponse(json_object, safe=False)
+
+    
+def load_model():
+    global regressor
+    regressor = Sequential()
+    checkpoint_path = os.path.join(os.path.dirname(__file__), "checkpoint")
+    with open(os.path.join(checkpoint_path, "checkpoint.pkl"), "rb") as f:
+        regressor = pickle.load(f)
+
+def load_scaler():
+    global scaler
+    companies = ["AAPL", "AMZN", "CSCO", "GE", "IBM", "GOOG", "MSFT"]
+
+    filepath = os.path.join(os.path.dirname(__file__), "scalers")
+    files = os.listdir(filepath)
+    scaler = {}
+
+    for i in range(len(files)):
+        with open(os.path.join(filepath, files[i]), "rb") as f:
+            scaler[companies[i]] = pickle.load(f)
+    # return scaler
 
 def predict(company: str):
     companies = ["AAPL", "AMZN", "CSCO", "GE", "IBM", "GOOG", "MSFT"]
@@ -27,11 +56,13 @@ def predict(company: str):
         return JsonResponse({"message": "Invalid company name."})
     index = companies.index(company)
 
-    regressor = Sequential()
-    checkpoint_path = os.path.join(os.path.dirname(__file__), "checkpoint")
-    with open(os.path.join(checkpoint_path, "checkpoint.pkl"), "rb") as f:
-        regressor: Sequential = pickle.load(f)
-    scaler = load_scaler()
+    # regressor = Sequential()
+    # checkpoint_path = os.path.join(os.path.dirname(__file__), "checkpoint")
+    # with open(os.path.join(checkpoint_path, "checkpoint.pkl"), "rb") as f:
+    #     regressor: Sequential = pickle.load(f)
+    # scaler = load_scaler()
+    global regressor
+    global scaler
     index = 0
 
     # stocks = Stocks.objects.all().order_by("date")
@@ -73,17 +104,3 @@ def predict(company: str):
     predicted_values = [str(value) for value in predicted_values]
     return JsonResponse({"real": real_values, "predicted": predicted_values})
     # return JsonResponse({"real": 0, "predicted": 0})
-
-
-def load_scaler():
-    companies = ["AAPL", "AMZN", "CSCO", "GE", "IBM", "GOOG", "MSFT"]
-
-    filepath = os.path.join(os.path.dirname(__file__), "scalers")
-    files = os.listdir(filepath)
-    scaler: dict[int, MinMaxScaler] = {}
-
-    for i in range(len(files)):
-        with open(os.path.join(filepath, files[i]), "rb") as f:
-            scaler[companies[i]] = pickle.load(f)
-    # print(type(scaler))
-    return scaler
