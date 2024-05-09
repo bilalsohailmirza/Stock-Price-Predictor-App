@@ -12,11 +12,11 @@ const Navbar = () => {
   const { theme, setTheme } = useTheme();
   const routes = [
     {
-      href: "/",
+      href: "/register",
       label: "SignUp",
     },
     {
-      href: "/",
+      href: "/login",
       label: "SignIn",
     },
     {
