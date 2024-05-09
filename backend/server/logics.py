@@ -2,14 +2,12 @@ import matplotlib.pyplot as plt
 import numpy as np
 from django_pandas.io import read_frame
 from django.http import JsonResponse
+from django.core import serializers
 from .models import Stocks
 from sklearn.preprocessing import MinMaxScaler
-from keras.models import Sequential
 from keras.layers import Dense, LSTM, Dropout, GRU, Bidirectional
 from keras.optimizers import SGD
-from keras.models import load_model
-from sklearn.metrics import mean_squared_error
-from silence_tensorflow import silence_tensorflow
+from keras.models import Sequential
 import pickle
 import os
 
@@ -19,6 +17,17 @@ def generate_graphs(companies: list[str]):
         df = read_frame(stocks)
         print(df.info())
         return df
+    
+def getStockData(company: str):
+    companies = ["AAPL", "AMZN", "CSCO", "GE", "IBM", "GOOG", "MSFT"]
+    if company not in companies:
+        return JsonResponse({"message": "Invalid company name."})
+    index = companies.index(company)
+
+    stocks = Stocks.objects.filter(name=company)
+    json_object = serializers.serialize("json", stocks, fields=["id", "name", "date", "open", "close", "high", "low", "close", "adj_close", "volume"])
+    return JsonResponse(json_object, safe=False)
+
     
 def load_model():
     global regressor
