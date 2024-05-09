@@ -23,7 +23,6 @@ def returnData(request):
     print(closing)
     return JsonResponse({"closing": str(closing)})
 
-def test_logic(request):
-    # load_scaler()
-    predict()
-    return JsonResponse({"message": "None"})
+def test_logic(request, company):
+    return predict(company)
+    # return JsonResponse({"message": "None"})
