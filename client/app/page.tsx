@@ -1,11 +1,14 @@
 
-import Section from "./ui/Section"
+import Section from "./ui/landingPage/Section"
 
 import image1 from "../public/LandingPage/Finance app-cuate.svg"
 import image2 from "../public/LandingPage/Money stress-rafiki.svg"
 import image3 from "../public/LandingPage/Finance app-amico.svg"
 
 import { StaticImport } from "next/dist/shared/lib/get-img-props";
+
+import Navbar from "./ui/landingPage/Navbar"
+import Footer from "./ui/landingPage/Footer";
 
 export default function Home() {
 
@@ -33,36 +36,33 @@ export default function Home() {
       },
   ];
   
-  // const sectionAttributes : SectionAttributes = {
-  //   [
-  //     heading: "Invest Confidently", paragraph: "Stock buddy is a stock price predicting platform that takes the guess work out of investment decisions by validating them with the use of Artificial Intelligence",
-  //   ]: 
-  // }
-
-  // {
-  //   heading:string: "Invest Confidently",
-  //   paragraph: "Stock buddy is a stock price predicting platform that takes the guess work out of investment decisions by validating them with the use of Artificial Intelligence",
-  // },
 
   return (
-    <main className="flex-column items-center justify-between">
-      <Section
-        heading={sectionAttributes[0].heading}
-        paragraph={sectionAttributes[0].paragraph}
-        image={image1}
-        reverse={false}
-      />
-      <Section
-        heading={sectionAttributes[1].heading}
-        paragraph={sectionAttributes[1].paragraph}
-        image={image2}
-        reverse={true}
-      /><Section
-        heading={sectionAttributes[2].heading}
-        paragraph={sectionAttributes[2].paragraph}
-        image={image3}
-        reverse={false}
-      />
-    </main>
+    <>
+
+      <Navbar/>
+
+      <main className="flex-column items-center justify-between">
+        <Section
+          heading={sectionAttributes[0].heading}
+          paragraph={sectionAttributes[0].paragraph}
+          image={image1}
+          reverse={false}
+          />
+        <Section
+          heading={sectionAttributes[1].heading}
+          paragraph={sectionAttributes[1].paragraph}
+          image={image2}
+          reverse={true}
+          /><Section
+          heading={sectionAttributes[2].heading}
+          paragraph={sectionAttributes[2].paragraph}
+          image={image3}
+          reverse={false}
+          />
+      </main>
+
+      <Footer/>
+    </>
   );
 }
