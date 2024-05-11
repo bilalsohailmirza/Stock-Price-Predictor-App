@@ -11,7 +11,6 @@ from keras.models import Sequential
 import pickle
 import os
 import datetime
-import json
 
 def generate_graphs(companies: list[str]):
     for company in companies:
