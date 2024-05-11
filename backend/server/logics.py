@@ -1,8 +1,8 @@
 import matplotlib.pyplot as plt
 import numpy as np
+from rest_framework import serializers
 from django_pandas.io import read_frame
 from django.http import JsonResponse
-from django.core import serializers
 from .models import Stocks
 from sklearn.preprocessing import MinMaxScaler
 from keras.layers import Dense, LSTM, Dropout, GRU, Bidirectional
@@ -10,6 +10,8 @@ from keras.optimizers import SGD
 from keras.models import Sequential
 import pickle
 import os
+import datetime
+import json
 
 def generate_graphs(companies: list[str]):
     for company in companies:
@@ -25,9 +27,31 @@ def getStockData(company: str):
     index = companies.index(company)
 
     stocks = Stocks.objects.filter(name=company)
-    json_object = serializers.serialize("json", stocks, fields=["id", "name", "date", "open", "close", "high", "low", "close", "adj_close", "volume"])
-    return JsonResponse(json_object, safe=False)
+    json_data = []
+    for stock in stocks[:1000]:
+        d = {}
+        d["id"] = stock.id
+        d["name"] = stock.name
+        d["date"] = str(stock.date)
+        d["open"] = stock.open
+        d["high"] = stock.high
+        d["low"] = stock.low
+        d["close"] = stock.close
+        d["adj_close"] = stock.adj_close
+        d["volume"] = stock.volume
+        # d.append(stock.id)
+        # d.append(stock.name)
+        # d.append(str(stock.date))
+        # d.append(stock.open)
+        # d.append(stock.high)
+        # d.append(stock.low)
+        # d.append(stock.close)
+        # d.append(stock.adj_close)
+        # d.append(stock.volume)
+        json_data.append(d)
 
+    print(json_data)    
+    return JsonResponse(json_data, safe=False)
     
 def load_model():
     global regressor
@@ -68,6 +92,10 @@ def predict(company: str):
     # stocks = Stocks.objects.all().order_by("date")
     stocks = Stocks.objects.filter(name=company).order_by("date")
     closing = [stock.close for stock in stocks]
+    # closing_dates = [(stock.close, stock.date) for stock in stocks]
+    dates = stocks.values_list('date', flat=True).distinct()
+
+    print("Dates size = ", len(dates))
     closing_true = np.array(closing[-60:])
     closing_test = scaler[companies[index]].fit_transform(closing_true.reshape(-1, 1))
     closing_test = np.array(closing_test).reshape(-1, 60, 1)
@@ -76,9 +104,12 @@ def predict(company: str):
     print(closing_test)
     predicted_values = []
 
-    for i in range(30):
+    final_date = stocks[len(stocks) - 1].date
+
+    for i in range(0, 100):
         y_pred = scaler[companies[index]].inverse_transform(regressor.predict(closing_test))
-        predicted_values.append(y_pred[0][0])
+        new_date = final_date + datetime.timedelta(days=i)
+        predicted_values.append({"time": str(new_date), "value": str(y_pred[0][0])})
         scaled_predicted_value = scaler[companies[index]].transform(y_pred.reshape(1,-1))
         print(y_pred, scaled_predicted_value)
 
@@ -86,21 +117,35 @@ def predict(company: str):
         new_array.append(scaled_predicted_value[0][0])
         closing_test = np.array(new_array).reshape(1, -1, 1)
 
-    # print(y_true[:10])
-    # print(len(y_pred))
-    # print(y_pred)
+    print(closing[-20:])
+
     print(len(predicted_values))
     print(predicted_values)
 
-    i = 0
-    while i < len(stocks):
-        if stocks[i].date.year == 2015:
-            break
-        i += 1
-    assert i < len(stocks), "How the hell did we even get here? Stock mein hai hi nhi kya 2015?"
-    real_values = closing[i:]
+    # i = 0
+    # while i < len(dates):
+    #     if dates[i].year == 2015:
+    #         break
+    #     i += 1
+    # assert i < len(stocks), "How the hell did we even get here? Stock mein hai hi nhi kya 2015?"
+    # real_values = closing[i:]
+    values = 3000
+    real_values = []
+    # for k in range(i, min(len(dates), len(closing)) - 1):
+    #     if (i + k >= min(len(dates), len(closing))):
+    #         break
+    #     real_values.append({"time": str(dates[i+k]), "value": str(closing[i+k])})
+    for i in range(values):
+        real_values.append({"time": str(dates[len(dates) - values + i]), "value": str(closing[len(closing) - values + i])})
+    
 
-    real_values = [str(value) for value in real_values]
-    predicted_values = [str(value) for value in predicted_values]
+    print("10 values")
+    print()
+    print(real_values)
+    # print(predicted_values[:10])
+
+    # real_values = [str(value) for value in real_values]
+    # predicted_values = [str(value) for value in predicted_values]
+    # print(JsonResponse({"real": real_values, "predicted": predicted_values}))
+    
     return JsonResponse({"real": real_values, "predicted": predicted_values})
-    # return JsonResponse({"real": 0, "predicted": 0})

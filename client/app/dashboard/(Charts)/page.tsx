@@ -1,8 +1,9 @@
-'use client'  
+'use client'
 
 import { FormEvent, FormEventHandler, useEffect, useState, ChangeEvent, ChangeEventHandler } from "react";
+import axios from 'axios';
 import ChartComponent from "./ChartComponent";
-import {allData} from "./data";
+import { allData } from "./data";
 import {
   Select,
   SelectContent,
@@ -17,29 +18,73 @@ const Charts = (props: any) => {
 
   const options = [
     {
-      value: "APPLE",
-      label: "AAPL"
+      label: "Apple Inc.",
+      value: "AAPL"
     }, {
-      value: "Google",
-      label: "GOOG"
+      label: "Alphabet Inc. (GOOG)",
+      value: "GOOG"
     }, {
-      value: "CISCO",
-      label: "CSCO"
+      label: "Cisco Systems, Inc. (CSCO)",
+      value: "CSCO"
+    },
+    {
+      label: "International Business Machines Corporation (IBM)",
+      value: "IBM"
+    },
+    {
+      label: "Amazon.com, Inc. (AMZN)",
+      value: "AMZN"
+    },
+    {
+      label: "Microsoft Corporation (MSFT)",
+      value: "MSFT"
+    },
+    {
+      label: "General Electric Company (GE)",
+      value: "GE"
     },
   ]
-  const [stockName, setStockName] = useState(options[0].value);
+  const [stockName, setStockName] = useState("AAPL");
+  const [stockData, setStockData] = useState([]);
+  const [predData, setPredData] = useState([]);
+
+
   const handleSelect = (event: any) => {
-    console.log(event.target.value)
+    // console.log(event.target.value)
     setStockName(event.target.value)
   }
-  // useEffect(() => {
-  //   handleSelect(event)
 
-  // }, [stockName])
-  
-    return (
+  const handleApiResponse = (response: any) => {
+    response.data.real = convertStrToNumber(response.data.real)
+    response.data.predicted = convertStrToNumber(response.data.predicted)
+    setStockData(response.data.real)
+    setPredData(response.data.predicted)
 
-      <div className="mt-8">
+  }
+  const convertStrToNumber = (results: any) => {
+    for (let i = 0; i < results.length; i++) {
+      results[i].value = parseFloat(results[i].value)
+    };
+    // console.log("Values After Conversion", results)
+    return results
+  }
+  useEffect(() => {
+    try {
+
+      axios.get(`http://localhost:8000/test/${stockName}/`)
+        .then((results) => (handleApiResponse(convertStrToNumber(results))))
+
+    } catch (err) {
+      console.log(err)
+    }
+    // if (stockData.length > 0) {
+    //   console.log(stock)
+    // }
+  }, [stockName, setStockData, setPredData])
+
+  return (
+
+    <div className="mt-8">
       <div className="flex my-8 p-4 float-right">
 
         {/* <Select>
@@ -59,17 +104,18 @@ const Charts = (props: any) => {
             </SelectGroup>
           </SelectContent>
         </Select> */}
-      
 
-       <select 
-        onChange={handleSelect}
-        className="px-12 py-3 rounded-md bg-blue-700"
-        name="Select a Stock" id=""
+
+        <select
+          onChange={handleSelect}
+          className="px-12 py-3 rounded-md bg-blue-700"
+
+          name="Select a Stock" id=""
         >
           {options.map(option => (
-            <option key={option.label} value={option.value}>{option.label}</option>
+            <option key={option.label} value={option.value}>{option.value}</option>
           ))}
-        {/* <option 
+          {/* <option 
         className="focus:bg-blue-9500 rounded-md"
         value="" 
         >
@@ -78,15 +124,15 @@ const Charts = (props: any) => {
         <option value="">AAPL</option>
         <option value="">CSCO</option>
         <option value="">IBM</option> */}
-       </select>
+        </select>
 
       </div>
 
-      <ChartComponent data={allData.reversedData} predData={allData.predData} className = 'w-[90%] h-screen ml-[5%]' Name = {stockName}></ChartComponent>
-      
-      </div>
+      <ChartComponent stockData={stockData} predData={predData} className='w-[90%] h-screen ml-[5%]' Name={stockName}></ChartComponent>
 
-    );
+    </div>
+
+  );
 };
 
 export default Charts
